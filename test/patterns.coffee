@@ -1,16 +1,16 @@
-pattern = require 'matchbox/index'
+{ Pred, If, compile } = require 'matchbox/index'
 { assert } = require 'chai'
 
 describe "pattern helpers", ->
   describe "If", ->
     it "invokes the function to determine a match", ->
-      isPositive = pattern.If (x) -> x > 0
-      assert pattern.matches(isPositive, 10)
-      assert !pattern.matches(isPositive, 0)
+      isPositive = compile(If (x) -> x > 0)
+      assert isPositive(10)
+      assert !isPositive(0)
 
     it "produces an immutable value", ->
       "use strict"
-      isPositive = pattern.If (x) -> x > 0
+      isPositivePattern = If (x) -> x > 0
       assert.throws -> isPositive.matches = (x) -> x < 10
       assert.throws -> isPositive.foo = 10
 

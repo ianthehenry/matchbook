@@ -9,22 +9,26 @@ class PredicatePattern {
   }
 }
 
-let all = (list) => {
+let all = (f, list) => {
+  if (!list || !list[Symbol.iterator]) {
+    return false;
+  }
+
   for (let x of list) {
-    if (!x) {
+    if (!f(x)) {
       return false;
     }
   }
   return true;
 };
 
-let zipWithSameLength = function*(f, list1, list2) {
+let zipSameLength = function*(list1, list2) {
   for (let i = 0; i < list1.length; i++) {
-    yield f(list1[i], list2[i]);
+    yield [list1[i], list2[i]];
   }
 };
 
-let call = (f, x) => f(x);
+let call = ([f, x]) => f(x);
 
 let constTrue = () => true;
 let isString = x => typeof x === 'string';
@@ -39,7 +43,7 @@ let matchesArray = pattern => {
   return target => {
     return Array.isArray(target)
         && pattern.length === target.length
-        && all(zipWithSameLength(call, predicates, target));
+        && all(call, zipSameLength(predicates, target));
   };
 };
 
@@ -60,14 +64,10 @@ compile = (pattern) => {
     return matchesArray(pattern);
   } else if (typeof pattern === 'function') {
     return x => x instanceof pattern;
-  } else if (pattern instanceof PredicatePattern) {
-    return pattern.matches;
   } else {
     return x => x === pattern;
   }
 };
-
-let matches = (pattern, target) => compile(pattern)(target);
 
 let pattern = (matchSetup) => {
   if (typeof matchSetup !== 'function') {
@@ -86,7 +86,7 @@ let pattern = (matchSetup) => {
     if (typeof implementation !== 'function') {
       throw new Error("Final argument to match must be a function implementation.");
     }
-    patterns.push([pattern, implementation]);
+    patterns.push([compile(pattern), implementation]);
   };
 
   matchSetup(function() { matchImplementation.apply(this, arguments); });
@@ -96,7 +96,7 @@ let pattern = (matchSetup) => {
 
   return function(...args) {
     for (let [pattern, implementation] of patterns) {
-      if (matches(pattern, args)) {
+      if (pattern(args)) {
         return implementation.apply(this, args);
       }
     }
@@ -106,20 +106,17 @@ let pattern = (matchSetup) => {
 
 pattern.Any = AnyPattern;
 pattern.If = (pred) => new PredicatePattern(pred);
-pattern.Or = (pattern1, pattern2) => new PredicatePattern(x => matches(pattern1, x) || matches(pattern2, x));
-pattern.And = (pattern1, pattern2) => new PredicatePattern(x => matches(pattern1, x) && matches(pattern2, x));
-pattern.List = (pattern) => new PredicatePattern(list => {
-  if (!list || !list[Symbol.iterator]) {
-    return false;
-  }
-  for (let x of list) {
-    if (!matches(pattern, x)) {
-      return false;
-    }
-  }
-  return true;
-});
-pattern.matches = matches;
+pattern.Or = (pattern1, pattern2) => {
+  pattern1 = compile(pattern1);
+  pattern2 = compile(pattern2);
+  return new PredicatePattern(x => pattern1(x) || pattern2(x));
+};
+pattern.And = (pattern1, pattern2) => {
+  pattern1 = compile(pattern1);
+  pattern2 = compile(pattern2);
+  return new PredicatePattern(x => pattern1(x) && pattern2(x));
+};
+pattern.List = (pattern) => new PredicatePattern(list => all(compile(pattern), list));
 pattern.compile = compile;
 pattern.overload = pattern;
 
