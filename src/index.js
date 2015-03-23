@@ -18,32 +18,56 @@ let all = (list) => {
   return true;
 };
 
-let zipWith = function*(f, list1, list2) {
-  let len = Math.min(list1.length, list2.length);
-  for (let i = 0; i < len; i++) {
+let zipWithSameLength = function*(f, list1, list2) {
+  for (let i = 0; i < list1.length; i++) {
     yield f(list1[i], list2[i]);
   }
 };
 
-let matches = function(pattern, target) {
-  if (pattern === AnyPattern) return true;
+let call = (f, x) => f(x);
 
-  if (pattern === String)   return typeof target === 'string';
-  if (pattern === Boolean)  return typeof target === 'boolean';
-  if (pattern === Number)   return typeof target === 'number';
-  if (pattern === Function) return typeof target === 'function';
+let constTrue = () => true;
+let isString = x => typeof x === 'string';
+let isBoolean = x => typeof x === 'boolean';
+let isNumber = x => typeof x === 'number';
+let isFunction = x => typeof x === 'function';
 
-  if (Array.isArray(pattern)) {
+let compile;
+
+let matchesArray = pattern => {
+  let predicates = pattern.map(compile);
+  return target => {
     return Array.isArray(target)
         && pattern.length === target.length
-        && all(zipWith(matches, pattern, target));
-  }
-
-  if (pattern instanceof PredicatePattern) return pattern.matches(target);
-  if (typeof pattern === 'function') return target instanceof pattern;
-
-  return pattern === target;
+        && all(zipWithSameLength(call, predicates, target));
+  };
 };
+
+compile = (pattern) => {
+  if (pattern instanceof PredicatePattern) {
+    return pattern.matches;
+  } else if (pattern === AnyPattern) {
+    return constTrue;
+  } else if (pattern === String) {
+    return isString;
+  } else if (pattern === Boolean) {
+    return isBoolean;
+  } else if (pattern === Number) {
+    return isNumber;
+  } else if (pattern === Function) {
+    return isFunction;
+  } else if (Array.isArray(pattern)) {
+    return matchesArray(pattern);
+  } else if (typeof pattern === 'function') {
+    return x => x instanceof pattern;
+  } else if (pattern instanceof PredicatePattern) {
+    return pattern.matches;
+  } else {
+    return x => x === pattern;
+  }
+};
+
+let matches = (pattern, target) => compile(pattern)(target);
 
 let pattern = (matchSetup) => {
   if (typeof matchSetup !== 'function') {
@@ -96,6 +120,7 @@ pattern.List = (pattern) => new PredicatePattern(list => {
   return true;
 });
 pattern.matches = matches;
+pattern.compile = compile;
 pattern.overload = pattern;
 
 module.exports = pattern;
