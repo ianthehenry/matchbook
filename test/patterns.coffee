@@ -1,7 +1,49 @@
-{ Pred, If, compile } = require 'matchbox/index'
+{ compile, If, Any, Or, And, List } = require 'matchbox/index'
+take = require './lib/take'
+repeat = require './lib/repeat'
+ParentES6 = require './lib/parent'
+ChildES6 = require './lib/child'
 { assert } = require 'chai'
 
-describe "pattern helpers", ->
+class Parent
+class Child extends Parent
+
+describe "patterns", ->
+  describe "classes", ->
+    it "works on CoffeeScript classes", ->
+      parent = new Parent()
+      child = new Child()
+      assert compile(Parent)(parent)
+      assert compile(Parent)(child)
+      assert !compile(Child)(parent)
+      assert compile(Child)(child)
+
+    it "works on Babel classes", ->
+      parent = new ParentES6()
+      child = new ChildES6()
+      assert compile(ParentES6)(parent)
+      assert compile(ParentES6)(child)
+      assert !compile(ChildES6)(parent)
+      assert compile(ChildES6)(child)
+
+  it "matches literal values", ->
+    assert compile(10)(10)
+    assert !compile(10)(20)
+    assert compile('foo')('foo')
+    assert !compile('foo')('bar')
+    assert compile(true)(true)
+    assert !compile(true)(false)
+
+  it "matches arrays deeply", ->
+    parent = new Parent()
+    child = new Child()
+    assert compile([10])([10])
+    assert !compile([10])([10, 20])
+    assert !compile([10])([20])
+    assert compile([10, 20])([10, 20])
+    assert compile([Parent, Child])([child, child])
+    assert !compile([Parent, Child])([parent, parent])
+
   describe "If", ->
     it "invokes the function to determine a match", ->
       isPositive = compile(If (x) -> x > 0)
@@ -15,15 +57,36 @@ describe "pattern helpers", ->
       assert.throws -> isPositive.foo = 10
 
   describe "List", ->
-    it "invokes the pattern for each object"
-    it "works on iterables"
+    it "invokes the pattern for each object", ->
+      assert compile(List(Number))([1, 2, 3])
+      assert !compile(List(Number))([1, 2, 3, 'foo'])
+      assert !compile(List([Number]))([[1], [2], [3], [4, 5]])
+
+    it "works on generators", ->
+      assert compile(List(Number))(take(5, repeat(10)))
+
+    it "short-circuits", ->
+      assert !compile(List(Number))(repeat('foo'))
 
   describe "And", ->
-    it "short-circuits"
+    it "short-circuits", ->
+      fn = compile(And(Number, If(-> throw new Error("nooo"))))
+      assert.throws -> fn(10)
+      assert.doesNotThrow -> fn('foo')
+      assert !fn('foo')
 
   describe "Or", ->
-    it "short-circuits"
+    it "short-circuits", ->
+      fn = compile(Or(Number, If(-> throw new Error("nooo"))))
+      assert.throws -> fn('foo')
+      assert.doesNotThrow -> fn(10)
+      assert fn(10)
 
   describe "Any", ->
-    it "always passes"
-    it "passes even when invoked with no arguments"
+    it "always passes", ->
+      assert compile(Any)(10)
+      assert compile(Any)('foo')
+      assert compile(Any)('bar')
+
+    it "passes even when invoked with no arguments", ->
+      assert compile(Any)()
