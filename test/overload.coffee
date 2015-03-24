@@ -1,4 +1,4 @@
-{ If, overload } = require 'matchbox/index'
+{ If, overload } = require 'matchbook/index'
 { assert } = require 'chai'
 
 describe "overload", ->

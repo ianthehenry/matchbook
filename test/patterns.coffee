@@ -1,4 +1,4 @@
-{ compile, If, Any, Or, And, List } = require 'matchbox/index'
+{ compile, If, Any, Or, And, List } = require 'matchbook/index'
 take = require './lib/take'
 repeat = require './lib/repeat'
 ParentES6 = require './lib/parent'

@@ -1,5 +1,5 @@
 {
-  "name": "matchbox",
+  "name": "matchbook",
   "description": "Declarative function overloading",
   "keywords": [
     "pattern",
@@ -26,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/ianthehenry/matchbox.git"
+    "url": "git://github.com/ianthehenry/matchbook.git"
   },
   "main": "lib/index.js"
 }

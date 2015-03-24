@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/ianthehenry/matchbox.svg)](https://travis-ci.org/ianthehenry/matchbox)
+[![Build Status](https://travis-ci.org/ianthehenry/matchbook.svg)](https://travis-ci.org/ianthehenry/matchbook)
 
-# matchbox
+# matchbook
 
 Declarative pattern matching.
 
