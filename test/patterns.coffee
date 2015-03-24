@@ -33,6 +33,12 @@ describe "patterns", ->
     assert !compile('foo')('bar')
     assert compile(true)(true)
     assert !compile(true)(false)
+    assert compile(undefined)(undefined)
+    assert compile(undefined)()
+    assert !compile(undefined)(null)
+    assert compile(null)(null)
+    assert !compile(null)(undefined)
+    assert !compile(null)()
 
   it "matches arrays deeply", ->
     parent = new Parent()
