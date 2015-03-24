@@ -38,12 +38,32 @@ let isFunction = x => typeof x === 'function';
 
 let compile;
 
-let matchesArray = pattern => {
+let compileArray = pattern => {
   let predicates = pattern.map(compile);
   return target => {
     return Array.isArray(target)
         && pattern.length === target.length
         && all(call, zipSameLength(predicates, target));
+  };
+};
+
+let compileObject = pattern => {
+  let compiled = [];
+  for (let key in pattern) {
+    if (pattern.hasOwnProperty(key)) {
+      compiled.push([key, compile(pattern[key])]);
+    }
+  }
+  return target => {
+    if (typeof target !== 'object') {
+      return false;
+    }
+    for (let [key, pattern] of compiled) {
+      if (!(key in target) || !pattern(target[key])) {
+        return false;
+      }
+    }
+    return true;
   };
 };
 
@@ -61,7 +81,9 @@ compile = (pattern) => {
   } else if (pattern === Function) {
     return isFunction;
   } else if (Array.isArray(pattern)) {
-    return matchesArray(pattern);
+    return compileArray(pattern);
+  } else if (typeof pattern === 'object') {
+    return compileObject(pattern);
   } else if (typeof pattern === 'function') {
     return x => x instanceof pattern;
   } else {

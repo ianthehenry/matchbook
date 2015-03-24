@@ -40,15 +40,36 @@ describe "patterns", ->
     assert !compile(null)(undefined)
     assert !compile(null)()
 
-  it "matches arrays deeply", ->
-    parent = new Parent()
-    child = new Child()
-    assert compile([10])([10])
-    assert !compile([10])([10, 20])
-    assert !compile([10])([20])
-    assert compile([10, 20])([10, 20])
-    assert compile([Parent, Child])([child, child])
-    assert !compile([Parent, Child])([parent, parent])
+  describe "arrays", ->
+    it "match deeply", ->
+      parent = new Parent()
+      child = new Child()
+      assert compile([10])([10])
+      assert !compile([10])([10, 20])
+      assert !compile([10])([20])
+      assert compile([10, 20])([10, 20])
+      assert compile([Parent, Child])([child, child])
+      assert !compile([Parent, Child])([parent, parent])
+
+  describe "objects", ->
+    it "match deeply", ->
+      assert compile({foo: Number})({foo: 10})
+      assert !compile({foo: Number})({foo: '10'})
+      assert !compile({foo: Number})({bar: 10})
+      assert compile({foo: {bar: Number}})({foo: {bar: 10}})
+      assert !compile({foo: {bar: Number}})({foo: {bar: '10'}})
+
+    it "specifies minimum keys", ->
+      assert compile({foo: Number})({foo: 10, bar: 20})
+
+    it "requires keys to be present, even with Any", ->
+      assert compile({foo: Any})({foo: undefined})
+      assert !compile({foo: Any})({bar: 20})
+
+    it "requires a typeof object", ->
+      assert !compile({toString: Function})(true)
+      assert !compile({toString: Function})(1)
+      assert compile({toString: Function})({})
 
   describe "If", ->
     it "invokes the function to determine a match", ->
