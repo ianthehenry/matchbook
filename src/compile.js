@@ -58,6 +58,8 @@ compile = (pattern) => {
     return isNumber;
   } else if (pattern === Function) {
     return isFunction;
+  } else if (pattern === Array) {
+    return Array.isArray;
   } else if (Array.isArray(pattern)) {
     return compileArray(pattern);
   } else if (typeof pattern === 'object') {

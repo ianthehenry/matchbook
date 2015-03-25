@@ -26,6 +26,9 @@ describe "patterns", ->
       assert !compile(ChildES6)(parent)
       assert compile(ChildES6)(child)
 
+  it "works with Array", ->
+    assert compile(Array)([1, 2, 3])
+
   it "matches literal values", ->
     assert compile(10)(10)
     assert !compile(10)(20)
