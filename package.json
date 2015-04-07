@@ -10,12 +10,12 @@
     "method",
     "multimethods"
   ],
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Ian Henry <ianthehenry@gmail.com>",
   "license": "MIT",
   "scripts": {
     "test": "eslint src/ && mocha",
-    "prepublish": "node_modules/.bin/babel ./src/ -d ./lib/"
+    "prepublish": "rm -r ./lib/ && node_modules/.bin/babel ./src/ -d ./lib/"
   },
   "devDependencies": {
     "babel": "4.7.16",
