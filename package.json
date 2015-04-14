@@ -15,7 +15,7 @@
   "license": "MIT",
   "scripts": {
     "test": "eslint src/ && mocha",
-    "prepublish": "rm -r ./lib/ && node_modules/.bin/babel ./src/ -d ./lib/"
+    "prepublish": "rm -rf ./lib/ && node_modules/.bin/babel ./src/ -d ./lib/"
   },
   "devDependencies": {
     "babel": "4.7.16",
